@@ -91,7 +91,7 @@ if st.button("GERAR ANÁLISE COMPLETA"):
     else:
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('models/gemini-1.5-flash') # Versão rápida e gratuita
+            model = genai.GenerativeModel('gemini-pro') # Versão rápida e gratuita
             
             with st.spinner('🚀 Consultando base de dados e calculando impostos...'):
                 conteudo = [PROMPT_SISTEMA]
