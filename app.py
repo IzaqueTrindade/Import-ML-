@@ -83,10 +83,15 @@ if st.button("GERAR ANÁLISE COMPLETA"):
     elif not (input_texto or input_foto):
         st.warning("⚠️ Forneça uma descrição ou foto.")
     else:
-        try:
+       try:
+            # Esta configuração força a versão estável da API
             genai.configure(api_key=api_key)
-            # Nome do modelo corrigido para evitar erro 404
-            model = genai.GenerativeModel(model_name='gemini-1.5-flash')
+            
+            # Mudança aqui: especificamos a versão da API para evitar o erro v1beta
+            model = genai.GenerativeModel(
+                model_name='gemini-1.5-flash',
+                generation_config={"typical_p": 1}
+            )
             
             with st.spinner('🚀 Calculando custos e impostos...'):
                 conteudo = [PROMPT_SISTEMA]
