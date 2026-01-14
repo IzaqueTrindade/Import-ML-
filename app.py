@@ -36,7 +36,7 @@ if st.button("ANALISAR CUSTOS"):
     else:
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
             
             prompt = f"Analise para importação (Destino: {uf_destino}): NCM, Impostos (II, IPI, PIS, COFINS, ICMS), Custo Aéreo vs Marítimo e homologações."
             
