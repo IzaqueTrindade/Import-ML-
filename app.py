@@ -86,7 +86,7 @@ if st.button("GERAR ANÁLISE COMPLETA"):
         try:
             genai.configure(api_key=api_key)
             # Nome do modelo corrigido para evitar erro 404
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel(model_name='gemini-1.5-flash')
             
             with st.spinner('🚀 Calculando custos e impostos...'):
                 conteudo = [PROMPT_SISTEMA]
