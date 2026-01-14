@@ -2,50 +2,75 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# 1. Configuração da Página
-st.set_page_config(page_title="ImportExpert", layout="wide")
+# Configuração da Interface
+st.set_page_config(page_title="Importador Pro ML", layout="wide")
 
-# 2. Estilização
+# Estilo Visual
 st.markdown("""
     <style>
-    .stButton>button { width: 100%; background-color: #FFDB15; color: #333; font-weight: bold; }
+    .main { background-color: #f0f2f6; }
+    .stButton>button { width: 100%; background-color: #FFE600; color: #000; font-weight: bold; border-radius: 8px; border: none; }
+    .report-box { background-color: #ffffff; padding: 20px; border-radius: 10px; border-left: 5px solid #FFE600; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. Barra Lateral
+# Barra Lateral
 with st.sidebar:
-    st.title("⚙️ Configuração")
-    api_key = st.text_input("Sua Gemini API Key:", type="password")
-    uf_destino = st.selectbox("Destino (ICMS):", ["SP", "RJ", "MG", "PR", "SC", "RS", "ES", "GO"])
+    st.header("🔑 Configurações")
+    api_key = st.text_input("Gemini API Key:", type="password")
+    uf_destino = st.selectbox("Estado de Destino:", ["SP", "RJ", "MG", "PR", "SC", "RS", "ES", "GO", "BA", "PE"])
+    st.divider()
+    st.caption("v2.0 - Sistema de Análise Aduaneira")
 
-st.title("🚀 Calculadora de Importação")
+st.title("📦 Calculadora de Custo Final: Importação")
 
-# 4. Entrada de Dados
-tab1, tab2 = st.tabs(["🔗 Texto/Link", "📸 Foto"])
+# Tabs de entrada
+tab1, tab2 = st.tabs(["✍️ Descrição/Link", "📸 Foto do Produto"])
+
 with tab1:
-    input_texto = st.text_area("Descreva o produto:")
-with tab2:
-    input_foto = st.file_uploader("Suba uma foto:", type=['png', 'jpg', 'jpeg'])
+    input_texto = st.text_area("O que você está importando?", placeholder="Ex: 100 Smartwatches modelo Ultra, valor unitário 15 USD...")
 
-# 5. Lógica de Processamento
-if st.button("ANALISAR CUSTOS"):
+with tab2:
+    input_foto = st.file_uploader("Suba uma foto ou print do produto", type=['png', 'jpg', 'jpeg'])
+
+# Prompt Estruturado
+PROMPT_BASE = f"""
+Atue como Analista de Comércio Exterior Sênior. Analise o produto para revenda no Mercado Livre (Destino: {uf_destino}).
+Entregue:
+1. NCM e Tributação (II, IPI, PIS, COFINS, ICMS {uf_destino}). Verifique Antidumping.
+2. Tabela comparativa Landed Cost: Aéreo vs Marítimo.
+3. Necessidade de Anatel, Inmetro ou Anvisa.
+4. Sugestão de similar ou estratégia para reduzir custos.
+Responda em Português, de forma organizada com tabelas.
+"""
+
+if st.button("CALCULAR CUSTO TOTAL"):
     if not api_key:
-        st.error("Insira a API Key na lateral.")
+        st.error("❌ Erro: Insira sua API Key na barra lateral.")
     elif not (input_texto or input_foto):
-        st.warning("Forneça dados do produto.")
+        st.warning("⚠️ Aviso: Forneça uma descrição ou foto do produto.")
     else:
         try:
+            # Configuração da API
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash-latest')
             
-            prompt = f"Analise para importação (Destino: {uf_destino}): NCM, Impostos (II, IPI, PIS, COFINS, ICMS), Custo Aéreo vs Marítimo e homologações."
+            # Usando o modelo estável
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
-            with st.spinner('Calculando...'):
-                conteudo = [prompt]
-                if input_texto: conteudo.append(input_texto)
+            with st.spinner('⏳ Processando impostos e fretes...'):
+                conteudo = [PROMPT_BASE]
+                if input_texto: conteudo.append(f"Produto: {input_texto}")
                 if input_foto: conteudo.append(Image.open(input_foto))
                 
                 response = model.generate_content(conteudo)
+                
+                st.markdown("---")
+                st.markdown('<div class="report-box">', unsafe_allow_html=True)
                 st.markdown(response.text)
+                st.markdown('</div>', unsafe_allow_html=True)
+                st.success("✅ Análise gerada com sucesso!")
+                
         except Exception as e:
-            st.error(f"Erro: {e}")
+            st.error(f"❌ Erro no Processamento: {str(e)}")
+            if "404" in str(e):
+                st.info("Dica: O erro 404 geralmente indica que o arquivo 'requirements.txt' no GitHub precisa ser atualizado e o App reiniciado.")
